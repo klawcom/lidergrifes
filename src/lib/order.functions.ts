@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { checkoutEmail, canUpdateCustomer } from './account-rules';
 
 const qty = z.number().int().min(0).max(1000);
 export const orderSchema = z.object({
@@ -51,7 +52,7 @@ export const createOrder = createServerFn({ method: "POST" })
     });
     const total = linhas.reduce((s, l) => s + l.valor, 0);
 
-    const c = { ...data.cliente, email: owner?.email ?? data.cliente.email.toLowerCase() };
+    const c = { ...data.cliente, email: checkoutEmail(data.cliente.email, owner?.email ?? null) };
     const { data: existing, error: findError } = await supabaseAdmin.from('clientes').select('id,user_id').eq('email', c.email).maybeSingle();
     if (findError) throw new Error('Não foi possível registrar o cliente.');
     let customerId = existing?.id;
@@ -59,7 +60,7 @@ export const createOrder = createServerFn({ method: "POST" })
       const { data: cli, error } = await supabaseAdmin.from('clientes').insert({...c,user_id:owner?.id ?? null}).select('id').single();
       if (error) throw new Error('Não foi possível registrar o cliente.');
       customerId = cli.id;
-    } else if (owner && (!existing.user_id || existing.user_id === owner.id)) {
+    } else if (owner && canUpdateCustomer(existing.user_id, owner.id)) {
       const {error}=await supabaseAdmin.from('clientes').update({...c,user_id:owner.id}).eq('id',existing.id);
       if(error) throw new Error('Não foi possível atualizar seus dados.');
     }

@@ -8,7 +8,7 @@ const AuthContext = createContext<{user:User|null; ready:boolean; admin:boolean;
 export function AuthProvider({children}:{children:ReactNode}) {
  const [user,setUser]=useState<User|null>(null); const [ready,setReady]=useState(false);
  const queryClient=useQueryClient(); const router=useRouter();
- const account=useQuery({...accountQuery,queryKey:['account',user?.id],enabled:!!user});
+ const account=useQuery({...accountQuery,queryKey:['account',user?.id ?? 'signed-out'],enabled:!!user});
  useEffect(()=>{
  let active=true; let generation=0;
  const refresh=async()=>{ const g=++generation; const {data}=await supabase.auth.getUser(); if(active && g===generation){setUser(data.user);setReady(true);} };

@@ -34,7 +34,7 @@ type Form = Record<"nome" | "email" | "whatsapp" | "cep" | "rua" | "numero" | "c
 
 function Finalizar() {
   const { user } = useAuth();
-  const { data: account } = useQuery({...accountQuery,queryKey:['account',user?.id],enabled:!!user});
+  const { data: account } = useQuery({...accountQuery,queryKey:['account',user?.id ?? 'signed-out'],enabled:!!user});
   const cart = useCart();
   const { data: cfg } = useQuery(configQuery);
   const [f, setF] = useState<Form>({ nome: "", email: "", whatsapp: "", cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacao: "" });
@@ -42,7 +42,7 @@ function Finalizar() {
   useEffect(()=>{
     if (!user) return;
     const customer = account?.customer;
-    setF(current=>({...current,nome:current.nome || customer?.nome || account?.profile?.display_name || user.user_metadata.full_name || user.user_metadata.name || '',email:user.email ?? '',whatsapp:current.whatsapp || customer?.whatsapp || '',cep:current.cep || customer?.cep || '',rua:current.rua || customer?.rua || '',numero:current.numero || customer?.numero || '',complemento:current.complemento || customer?.complemento || '',bairro:current.bairro || customer?.bairro || '',cidade:current.cidade || customer?.cidade || '',estado:current.estado || customer?.estado || ''}));
+    setF(current=>({...current,nome:current.nome || customer?.nome || account?.profile?.display_name || user.user_metadata['full_name'] || user.user_metadata['name'] || '',email:user.email ?? '',whatsapp:current.whatsapp || customer?.whatsapp || '',cep:current.cep || customer?.cep || '',rua:current.rua || customer?.rua || '',numero:current.numero || customer?.numero || '',complemento:current.complemento || customer?.complemento || '',bairro:current.bairro || customer?.bairro || '',cidade:current.cidade || customer?.cidade || '',estado:current.estado || customer?.estado || ''}));
   },[user,account]);
   const set = (k: keyof Form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
 
