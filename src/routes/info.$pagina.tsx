@@ -12,7 +12,7 @@ export const Route = createFileRoute("/info/$pagina")({
   loader: async ({ context, params }) => {
     if (!PAGES[params.pagina]) throw notFound();
     await context.queryClient.ensureQueryData(configQuery);
-    return { titulo: PAGES[params.pagina].titulo };
+    return { titulo: PAGES[params.pagina]!.titulo };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/info/$pagina")({
 function InfoPage() {
   const { pagina } = Route.useParams();
   const { data: cfg } = useSuspenseQuery(configQuery);
-  const pg = PAGES[pagina];
+  const pg = PAGES[pagina]!;
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-semibold">{pg.titulo}</h1>
