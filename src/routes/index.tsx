@@ -28,9 +28,9 @@ function Index() {
   return (
     <div className="mx-auto max-w-6xl px-4">
       <section className="mt-4 rounded-3xl bg-secondary px-5 py-10 sm:px-10 sm:py-16">
-        <p className="text-sm font-semibold uppercase tracking-widest text-accent-foreground/70">Atacado</p>
+        <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Atacado</p>
         <h1 className="mt-2 max-w-xl text-3xl font-semibold leading-tight sm:text-5xl">
-          Camisetas básicas e polos no atacado, a partir de <span className="text-accent">10 peças</span>
+          Camisetas básicas e polos no atacado, a partir de <span className="underline decoration-accent decoration-4 underline-offset-4">10 peças</span>
         </h1>
         {cats[0] && (
           <Link
