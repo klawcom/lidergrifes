@@ -10,8 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
 import { Route as FinalizarRouteImport } from './routes/finalizar'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedMeusPedidosRouteImport } from './routes/_authenticated/meus-pedidos'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
 import { Route as InfoPaginaRouteImport } from './routes/info.$pagina'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
@@ -19,6 +23,15 @@ import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CarrinhoRoute = CarrinhoRouteImport.update({
@@ -31,6 +44,17 @@ const FinalizarRoute = FinalizarRouteImport.update({
   path: '/finalizar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeusPedidosRoute =
+  AuthenticatedMeusPedidosRouteImport.update({
+    id: '/meus-pedidos',
+    path: '/meus-pedidos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const CategoriaSlugRoute = CategoriaSlugRouteImport.update({
   id: '/categoria/$slug',
   path: '/categoria/$slug',
@@ -49,16 +73,22 @@ const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/carrinho': typeof CarrinhoRoute
   '/finalizar': typeof FinalizarRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/info/$pagina': typeof InfoPaginaRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/carrinho': typeof CarrinhoRoute
   '/finalizar': typeof FinalizarRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/info/$pagina': typeof InfoPaginaRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -66,8 +96,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/carrinho': typeof CarrinhoRoute
   '/finalizar': typeof FinalizarRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/info/$pagina': typeof InfoPaginaRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -76,24 +110,34 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/carrinho'
     | '/finalizar'
+    | '/admin'
+    | '/meus-pedidos'
     | '/categoria/$slug'
     | '/info/$pagina'
     | '/produto/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/carrinho'
     | '/finalizar'
+    | '/admin'
+    | '/meus-pedidos'
     | '/categoria/$slug'
     | '/info/$pagina'
     | '/produto/$slug'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
     | '/carrinho'
     | '/finalizar'
+    | '/_authenticated/admin'
+    | '/_authenticated/meus-pedidos'
     | '/categoria/$slug'
     | '/info/$pagina'
     | '/produto/$slug'
@@ -101,6 +145,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   CarrinhoRoute: typeof CarrinhoRoute
   FinalizarRoute: typeof FinalizarRoute
   CategoriaSlugRoute: typeof CategoriaSlugRoute
@@ -117,6 +163,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/carrinho': {
       id: '/carrinho'
       path: '/carrinho'
@@ -130,6 +190,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/finalizar'
       preLoaderRoute: typeof FinalizarRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meus-pedidos': {
+      id: '/_authenticated/meus-pedidos'
+      path: '/meus-pedidos'
+      fullPath: '/meus-pedidos'
+      preLoaderRoute: typeof AuthenticatedMeusPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/categoria/$slug': {
       id: '/categoria/$slug'
@@ -155,8 +229,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedMeusPedidosRoute: typeof AuthenticatedMeusPedidosRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedMeusPedidosRoute: AuthenticatedMeusPedidosRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   CarrinhoRoute: CarrinhoRoute,
   FinalizarRoute: FinalizarRoute,
   CategoriaSlugRoute: CategoriaSlugRoute,

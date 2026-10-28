@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { useAuth } from "@/lib/auth";
+import { accountQuery } from "@/lib/account.functions";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
 import { useCart } from "@/lib/cart";
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/finalizar")({
       { name: "description", content: "Informe seus dados e envie o pedido pelo WhatsApp." },
       { property: "og:title", content: "Finalizar pedido — Líder Grifes" },
       { property: "og:description", content: "Envie seu pedido no atacado pelo WhatsApp." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -28,10 +33,17 @@ const input =
 type Form = Record<"nome" | "email" | "whatsapp" | "cep" | "rua" | "numero" | "complemento" | "bairro" | "cidade" | "estado" | "observacao", string>;
 
 function Finalizar() {
+  const { user } = useAuth();
+  const { data: account } = useQuery({...accountQuery,queryKey:['account',user?.id ?? 'signed-out'],enabled:!!user});
   const cart = useCart();
   const { data: cfg } = useQuery(configQuery);
   const [f, setF] = useState<Form>({ nome: "", email: "", whatsapp: "", cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacao: "" });
   const [sending, setSending] = useState(false);
+  useEffect(()=>{
+    if (!user) return;
+    const customer = account?.customer;
+    setF(current=>({...current,nome:current.nome || customer?.nome || account?.profile?.display_name || user.user_metadata['full_name'] || user.user_metadata['name'] || '',email:user.email ?? '',whatsapp:current.whatsapp || customer?.whatsapp || '',cep:current.cep || customer?.cep || '',rua:current.rua || customer?.rua || '',numero:current.numero || customer?.numero || '',complemento:current.complemento || customer?.complemento || '',bairro:current.bairro || customer?.bairro || '',cidade:current.cidade || customer?.cidade || '',estado:current.estado || customer?.estado || ''}));
+  },[user,account]);
   const set = (k: keyof Form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
 
   const buscarCep = async (cep: string) => {
@@ -54,6 +66,7 @@ function Finalizar() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!cfg?.whatsapp_loja) { toast.error('Aguarde o contato da loja carregar.'); return; }
     let wa = digits(f.whatsapp);
     if (wa.length === 10 || wa.length === 11) wa = "55" + wa;
     // Open the window synchronously so mobile browsers don't block it.
@@ -92,7 +105,7 @@ function Finalizar() {
     <form onSubmit={submit} className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-32 pt-6">
       <h1 className="text-2xl font-semibold">Seus dados</h1>
       <Field label="Nome completo"><input required autoComplete="name" className={input} value={f.nome} onChange={set("nome")} /></Field>
-      <Field label="E-mail"><input required type="email" inputMode="email" autoComplete="email" className={input} value={f.email} onChange={set("email")} /></Field>
+      <Field label="E-mail"><input required readOnly={!!user} type="email" inputMode="email" autoComplete="email" className={input} value={f.email} onChange={set("email")} /></Field>
       <Field label="WhatsApp (com DDD)"><input required type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="11999999999" pattern="\d{10,13}" className={input} value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: digits(e.target.value) })} /></Field>
       <h2 className="mt-2 text-lg font-semibold">Endereço de entrega</h2>
       <Field label="CEP"><input required inputMode="numeric" autoComplete="postal-code" maxLength={8} pattern="\d{8}" className={input} value={f.cep} onChange={(e) => { const v = digits(e.target.value); setF({ ...f, cep: v }); buscarCep(v); }} /></Field>
@@ -110,9 +123,9 @@ function Finalizar() {
             <p className="text-xs text-muted-foreground">{cart.pecas} peças</p>
             <p className="text-xl font-bold">{brl(cart.total)}</p>
           </div>
-          <button type="submit" disabled={sending} className="inline-flex h-12 items-center gap-2 rounded-full bg-whatsapp px-5 font-semibold text-whatsapp-foreground disabled:opacity-60">
+          <Button type="submit" disabled={sending || !cfg?.whatsapp_loja} className="inline-flex h-12 items-center gap-2 rounded-full bg-whatsapp px-5 font-semibold text-whatsapp-foreground hover:bg-whatsapp/90 disabled:opacity-60">
             <MessageCircle className="h-5 w-5" /> {sending ? "Enviando..." : "Enviar no WhatsApp"}
-          </button>
+          </Button>
         </div>
       </div>
     </form>

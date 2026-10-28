@@ -1,6 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Menu, Moon, ShoppingBag, Sun } from "lucide-react";
+import { Menu, Moon, ShoppingBag, Sun, UserRound, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { brandLogo } from "@/lib/identity";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart";
@@ -22,6 +25,7 @@ const iconBtn =
   "tap relative inline-flex items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary";
 
 export function SiteHeader() {
+  const { user, admin, signOut } = useAuth();
   const { pecas, items } = useCart();
   const { dark, toggle } = useTheme();
   const [open, setOpen] = useState(false);
@@ -46,6 +50,9 @@ export function SiteHeader() {
                 </Link>
               ))}
               <Link to="/carrinho" className="tap flex items-center rounded-xl px-3 hover:bg-secondary">Meu pedido</Link>
+              {user && <Link to="/meus-pedidos" className="tap flex items-center rounded-xl px-3 hover:bg-secondary">Meus pedidos</Link>}
+              {admin && <Link to="/admin" className="tap flex items-center rounded-xl px-3 hover:bg-secondary">Painel</Link>}
+              {user ? <Button variant="ghost" className="h-11 justify-start px-3" onClick={()=>void signOut()}><LogOut/>Sair</Button> : <Link to="/auth" className="tap flex items-center px-3">Entrar</Link>}
               <div className="my-2 border-t border-border" />
               <Link to="/info/$pagina" params={{ pagina: "sobre" }} className="tap flex items-center rounded-xl px-3 text-base text-muted-foreground hover:bg-secondary">Sobre nós</Link>
               <Link to="/info/$pagina" params={{ pagina: "trocas" }} className="tap flex items-center rounded-xl px-3 text-base text-muted-foreground hover:bg-secondary">Trocas</Link>
@@ -55,14 +62,15 @@ export function SiteHeader() {
         </Sheet>
 
         <Link to="/" className="flex min-w-0 items-center justify-center gap-2" aria-label="Líder Grifes Atacado">
-          <img src="/logo.webp" alt="" width={40} height={40} className="h-10 w-10 shrink-0" />
-          <span className="truncate font-display text-base font-semibold">Líder Grifes</span>
+          <img src={brandLogo} alt="" width={40} height={40} className="h-10 w-10 shrink-0 object-contain" />
+          <span className="truncate font-display text-sm font-semibold sm:text-base">Líder Grifes</span>
         </Link>
 
         <div className="flex items-center">
-          <button type="button" onClick={toggle} className={iconBtn} aria-label={dark ? "Tema claro" : "Tema escuro"}>
+          <Button variant="ghost" size="icon" type="button" onClick={toggle} className={iconBtn} aria-label={dark ? "Tema claro" : "Tema escuro"}>
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
+          </Button>
+          <Button asChild variant="ghost" className="tap px-2 text-sm"><Link to={user ? (admin ? '/admin' : '/meus-pedidos') : '/auth'}>{user ? <UserRound aria-label={admin?'Painel':'Minha conta'}/> : 'Entrar'}</Link></Button>
           <Link to="/carrinho" className={iconBtn} aria-label={`Pedido: ${items.length} itens`}>
             <ShoppingBag className="h-6 w-6" />
             {items.length > 0 && (

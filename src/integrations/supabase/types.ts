@@ -57,6 +57,7 @@ export type Database = {
           nome: string
           numero: string | null
           rua: string | null
+          user_id: string | null
           whatsapp: string
         }
         Insert: {
@@ -71,6 +72,7 @@ export type Database = {
           nome: string
           numero?: string | null
           rua?: string | null
+          user_id?: string | null
           whatsapp: string
         }
         Update: {
@@ -85,6 +87,7 @@ export type Database = {
           nome?: string
           numero?: string | null
           rua?: string | null
+          user_id?: string | null
           whatsapp?: string
         }
         Relationships: []
@@ -222,6 +225,7 @@ export type Database = {
           observacao: string | null
           status: Database["public"]["Enums"]["pedido_status"]
           total: number
+          user_id: string | null
         }
         Insert: {
           cliente_id?: string | null
@@ -230,6 +234,7 @@ export type Database = {
           observacao?: string | null
           status?: Database["public"]["Enums"]["pedido_status"]
           total?: number
+          user_id?: string | null
         }
         Update: {
           cliente_id?: string | null
@@ -238,6 +243,7 @@ export type Database = {
           observacao?: string | null
           status?: Database["public"]["Enums"]["pedido_status"]
           total?: number
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -301,6 +307,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

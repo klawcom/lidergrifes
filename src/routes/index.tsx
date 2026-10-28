@@ -3,14 +3,19 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, MessageCircle, Package, Truck } from "lucide-react";
 import { homeQuery } from "@/lib/catalog.functions";
 import { ProductCard } from "@/components/product-card";
+import { brandLogo, shareImage } from "@/lib/identity";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Líder Grifes Atacado — Camisetas e polos a partir de 10 peças" },
+      { title: "Líder Grifes Atacado" },
       { name: "description", content: "Camisetas básicas Cotton Pima e polos Piquet Duplo no atacado. Monte seu kit e finalize o pedido pelo WhatsApp." },
       { property: "og:title", content: "Líder Grifes Atacado" },
       { property: "og:description", content: "Camisetas básicas e polos no atacado, a partir de 10 peças." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: shareImage },
+      { name: "twitter:image", content: shareImage },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(homeQuery),
@@ -28,6 +33,7 @@ function Index() {
   return (
     <div className="mx-auto max-w-6xl px-4">
       <section className="mt-4 rounded-3xl bg-secondary px-5 py-10 sm:px-10 sm:py-16">
+        <img src={brandLogo} alt="Líder Grifes Atacado" width={112} height={112} className="mb-4 h-28 w-28 object-contain" />
         <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Atacado</p>
         <h1 className="mt-2 max-w-xl text-3xl font-semibold leading-tight sm:text-5xl">
           Camisetas básicas e polos no atacado, a partir de <span className="underline decoration-accent decoration-4 underline-offset-4">10 peças</span>

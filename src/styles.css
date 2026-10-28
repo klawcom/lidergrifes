@@ -151,7 +151,7 @@
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
   }
-  h1, h2, h3 { font-family: var(--app-font-display); letter-spacing: -0.02em; }
+  h1, h2, h3 { font-family: var(--app-font-display); letter-spacing: 0; }
 }
 
 @utility safe-bottom {

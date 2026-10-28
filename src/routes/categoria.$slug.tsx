@@ -16,6 +16,8 @@ export const Route = createFileRoute("/categoria/$slug")({
           { name: "description", content: loaderData.descricao ?? `${loaderData.nome} no atacado.` },
           { property: "og:title", content: `${loaderData.nome} — Líder Grifes` },
           { property: "og:description", content: loaderData.descricao ?? "" },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
         ]
       : [{ title: "Categoria — Líder Grifes" }, { name: "robots", content: "noindex" }],
   }),
