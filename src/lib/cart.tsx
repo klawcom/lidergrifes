@@ -10,6 +10,7 @@ export type CartItem = {
   kit: number;
   preco: number;
   tamanhos: SizeQty;
+  observacao?: string;
 };
 
 type Ctx = {

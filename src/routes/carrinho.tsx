@@ -48,6 +48,11 @@ function Carrinho() {
                 <p className="text-sm text-muted-foreground">
                   {SIZES.filter((s) => i.tamanhos[s] > 0).map((s) => `${s.toUpperCase()} ${i.tamanhos[s]}`).join(" · ")}
                 </p>
+                {i.observacao && (
+                  <p className="mt-1 text-xs text-muted-foreground italic">
+                    📝 Obs.: {i.observacao}
+                  </p>
+                )}
                 <p className="mt-1 font-semibold">{brl(i.preco)}</p>
               </div>
               <button type="button" onClick={() => remove(i.key)} className="tap grid place-items-center rounded-full text-muted-foreground hover:bg-secondary" aria-label="Remover">

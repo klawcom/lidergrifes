@@ -15,6 +15,13 @@
       "when": 1793209170044,
       "tag": "0001_secure_customer_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793215000000,
+      "tag": "0002_pedidos_numero_sequencial",
+      "breakpoints": true
     }
   ]
 }

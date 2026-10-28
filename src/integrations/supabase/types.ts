@@ -222,6 +222,7 @@ export type Database = {
           cliente_id: string | null
           created_at: string
           id: string
+          numero_sequencial: number
           observacao: string | null
           status: Database["public"]["Enums"]["pedido_status"]
           total: number
@@ -231,6 +232,7 @@ export type Database = {
           cliente_id?: string | null
           created_at?: string
           id?: string
+          numero_sequencial?: number
           observacao?: string | null
           status?: Database["public"]["Enums"]["pedido_status"]
           total?: number
@@ -240,6 +242,7 @@ export type Database = {
           cliente_id?: string | null
           created_at?: string
           id?: string
+          numero_sequencial?: number
           observacao?: string | null
           status?: Database["public"]["Enums"]["pedido_status"]
           total?: number

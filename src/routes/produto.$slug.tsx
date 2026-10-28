@@ -39,6 +39,7 @@ function ProdutoPage() {
   const [img, setImg] = useState(0);
   const [kitIdx, setKitIdx] = useState(0);
   const [q, setQ] = useState<SizeQty>(empty);
+  const [observacao, setObservacao] = useState("");
   if (!p) return null;
 
   const kit = p.kits[kitIdx];
@@ -56,9 +57,19 @@ function ProdutoPage() {
       toast.error(`Distribua ${kit.quantidade - total} peça(s) entre os tamanhos.`);
       return;
     }
-    cart.add({ produtoId: p.id, slug: p.slug, nome: p.nome, imagem: p.imagens[0] ?? "", kit: kit.quantidade, preco: kit.preco, tamanhos: q });
+    cart.add({
+      produtoId: p.id,
+      slug: p.slug,
+      nome: p.nome,
+      imagem: p.imagens[0] ?? "",
+      kit: kit.quantidade,
+      preco: kit.preco,
+      tamanhos: q,
+      observacao: observacao.trim() || undefined,
+    });
     toast.success("Adicionado ao pedido", { action: { label: "Ver pedido", onClick: () => navigate({ to: "/carrinho" }) } });
     setQ(empty);
+    setObservacao("");
   };
 
   return (
@@ -135,6 +146,21 @@ function ProdutoPage() {
           {SIZES.map((s) => (
             <SizeCounter key={s} label={s.toUpperCase()} value={q[s]} canAdd={!full} onChange={(v) => setQ({ ...q, [s]: Math.max(0, v) })} />
           ))}
+        </div>
+
+        <div className="mt-4">
+          <label htmlFor="item-obs" className="text-sm font-medium">
+            Observação do item (opcional)
+          </label>
+          <input
+            id="item-obs"
+            type="text"
+            maxLength={300}
+            placeholder="Ex.: cores específicas, detalhes ou preferências"
+            value={observacao}
+            onChange={(e) => setObservacao(e.target.value)}
+            className="mt-1.5 h-12 w-full rounded-xl border border-input bg-card px-4 text-base outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+          />
         </div>
       </div>
 

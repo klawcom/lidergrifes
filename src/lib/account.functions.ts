@@ -20,7 +20,7 @@ export const getMyOrders = createServerFn({ method: 'GET' }).middleware([require
  const { data: customer, error: cError } = await context.supabase.from('clientes').select('id').eq('user_id', context.userId).maybeSingle();
  if (cError) throw new Error('Não foi possível carregar seus pedidos.');
  if (!customer) return [];
- const { data, error } = await context.supabase.from('pedidos').select('id,total,status,created_at,observacao,itens:pedido_itens(kit,qtd_p,qtd_m,qtd_g,qtd_gg,valor,produto:produtos(nome))').eq('cliente_id', customer.id).order('created_at', { ascending: false });
+ const { data, error } = await context.supabase.from('pedidos').select('id,numero_sequencial,total,status,created_at,observacao,itens:pedido_itens(kit,qtd_p,qtd_m,qtd_g,qtd_gg,valor,observacao,produto:produtos(nome))').eq('cliente_id', customer.id).order('created_at', { ascending: false });
  if (error) throw new Error('Não foi possível carregar seus pedidos.');
  return data ?? [];
 });
@@ -29,7 +29,7 @@ export const getAdmin = createServerFn({ method: 'GET' }).middleware([requireSup
  const { data: allowed, error: roleError } = await context.supabase.rpc('has_role', { _user_id: context.userId, _role: 'admin' });
  const {data:verified,error:authError}=await context.supabase.auth.getUser();
  if (roleError || authError || !isStoreManager(verified.user?.email,!!verified.user?.email_confirmed_at,allowed===true)) throw new Error('Acesso restrito ao gestor.');
- const [config, orders] = await Promise.all([context.supabase.from('configuracoes').select('*').eq('id', 1).single(), context.supabase.from('pedidos').select('id,total,status,created_at,cliente:clientes(nome,email)').order('created_at', {ascending:false}).limit(100)]);
+ const [config, orders] = await Promise.all([context.supabase.from('configuracoes').select('*').eq('id', 1).single(), context.supabase.from('pedidos').select('id,numero_sequencial,total,status,created_at,cliente:clientes(nome,email)').order('created_at', {ascending:false}).limit(100)]);
  if (config.error || orders.error) throw new Error('Não foi possível carregar o painel.');
  return { config: config.data, orders: orders.data ?? [] };
 });
