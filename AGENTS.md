@@ -11,3 +11,7 @@
 
 - Catalog reads go through server functions in src/lib/catalog.functions.ts using a publishable-key client; orders are created only via createOrder (server-priced, admin client) — prices must never come from the browser.
 - Product images live in public/produtos as WebP with a "-sm" 384px variant; keep that naming so srcSet helpers in src/lib/format.ts work.
+- AuthProvider owns the single identity-change subscriber; protected account/admin pages live under the client-only authenticated layout and private server functions validate access independently.
+- Store account lifecycle triggers assign roles from verified identity only; customer and order ownership uses server-validated user IDs, never browser-supplied email claims.
+- Guest checkout must not overwrite an existing customer's private details; authenticated checkout uses the verified account email and server-priced createOrder only.
+- Brand assets are centralized in src/lib/identity.ts; favicon and platform icons are resized originals in public.

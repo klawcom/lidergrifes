@@ -26,7 +26,16 @@ export const orderSchema = z.object({
 export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((d) => orderSchema.parse(d))
   .handler(async ({ data }) => {
+    const { getRequest } = await import("@tanstack/react-start/server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const authorization = getRequest().headers.get('authorization');
+    let owner: { id: string; email: string } | null = null;
+    if (authorization) {
+      if (!authorization.startsWith('Bearer ')) throw new Error('Entre novamente na sua conta.');
+      const { data: auth, error } = await supabaseAdmin.auth.getUser(authorization.slice(7));
+      if (error || !auth.user?.email || !auth.user.email_confirmed_at) throw new Error('Entre novamente na sua conta.');
+      owner = { id: auth.user.id, email: auth.user.email.toLowerCase() };
+    }
     const ids = [...new Set(data.itens.map((i) => i.produtoId))];
     const { data: kits, error: kErr } = await supabaseAdmin
       .from("kits_preco")
@@ -42,17 +51,23 @@ export const createOrder = createServerFn({ method: "POST" })
     });
     const total = linhas.reduce((s, l) => s + l.valor, 0);
 
-    const c = data.cliente;
-    const { data: cli, error: cErr } = await supabaseAdmin
-      .from("clientes")
-      .upsert({ ...c, email: c.email.toLowerCase() }, { onConflict: "email" })
-      .select("id")
-      .single();
-    if (cErr) throw new Error(cErr.message);
+    const c = { ...data.cliente, email: owner?.email ?? data.cliente.email.toLowerCase() };
+    const { data: existing, error: findError } = await supabaseAdmin.from('clientes').select('id,user_id').eq('email', c.email).maybeSingle();
+    if (findError) throw new Error('Não foi possível registrar o cliente.');
+    let customerId = existing?.id;
+    if (!existing) {
+      const { data: cli, error } = await supabaseAdmin.from('clientes').insert({...c,user_id:owner?.id ?? null}).select('id').single();
+      if (error) throw new Error('Não foi possível registrar o cliente.');
+      customerId = cli.id;
+    } else if (owner && (!existing.user_id || existing.user_id === owner.id)) {
+      const {error}=await supabaseAdmin.from('clientes').update({...c,user_id:owner.id}).eq('id',existing.id);
+      if(error) throw new Error('Não foi possível atualizar seus dados.');
+    }
+    if (!customerId) throw new Error('Não foi possível registrar o cliente.');
 
     const { data: ped, error: pErr } = await supabaseAdmin
       .from("pedidos")
-      .insert({ cliente_id: cli.id, total, observacao: data.observacao || null })
+      .insert({ cliente_id: customerId, user_id: owner?.id ?? null, total, observacao: data.observacao || null })
       .select("id")
       .single();
     if (pErr) throw new Error(pErr.message);
