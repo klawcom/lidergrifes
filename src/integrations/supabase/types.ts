@@ -165,10 +165,12 @@ export type Database = {
       }
       pedido_itens: {
         Row: {
+          faixa: number | null
           id: string
-          kit: number
+          kit: number | null
           observacao: string | null
           pedido_id: string
+          preco_unitario: number | null
           produto_id: string | null
           qtd_g: number
           qtd_gg: number
@@ -177,10 +179,12 @@ export type Database = {
           valor: number
         }
         Insert: {
+          faixa?: number | null
           id?: string
-          kit: number
+          kit?: number | null
           observacao?: string | null
           pedido_id: string
+          preco_unitario?: number | null
           produto_id?: string | null
           qtd_g?: number
           qtd_gg?: number
@@ -189,10 +193,12 @@ export type Database = {
           valor: number
         }
         Update: {
+          faixa?: number | null
           id?: string
-          kit?: number
+          kit?: number | null
           observacao?: string | null
           pedido_id?: string
+          preco_unitario?: number | null
           produto_id?: string | null
           qtd_g?: number
           qtd_gg?: number

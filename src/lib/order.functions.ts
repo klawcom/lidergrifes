@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { checkoutEmail, canUpdateCustomer } from "./account-rules";
 import { publicDb } from "./public-db.server";
+import { getOrderTier, getTierUnitPrice } from "./pricing";
 
 const qty = z.number().int().min(0).max(1000);
 export const orderSchema = z.object({
@@ -22,7 +23,7 @@ export const orderSchema = z.object({
     .array(
       z.object({
         produtoId: z.string().uuid(),
-        kit: z.number().int(),
+        kit: z.number().int().optional().nullable(),
         p: qty,
         m: qty,
         g: qty,
@@ -34,7 +35,7 @@ export const orderSchema = z.object({
     .max(50),
 });
 
-/** Creates the order with server-side prices. Returns the order id, sequential number, total and line details. */
+/** Creates the order with server-side tier prices. Returns the order id, sequential number, total and line details. */
 export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((d) => orderSchema.parse(d))
   .handler(async ({ data }) => {
@@ -54,18 +55,50 @@ export const createOrder = createServerFn({ method: "POST" })
       .in("produto_id", ids);
     if (kErr) throw new Error(kErr.message);
 
+    // Validate minimum piece requirement (soma de todos os produtos do pedido)
+    const totalPecas = data.itens.reduce(
+      (sum, i) => sum + (i.p + i.m + i.g + i.gg),
+      0,
+    );
+    if (totalPecas < 10) {
+      throw new Error(
+        `O pedido mínimo é de 10 peças (seu pedido contém ${totalPecas} peça${totalPecas === 1 ? "" : "s"}).`,
+      );
+    }
+
+    // Determine order-level discount tier (10, 20, 30, 50)
+    const faixa = getOrderTier(totalPecas);
+
     const linhas = data.itens.map((i) => {
-      const k = kits?.find((x) => x.produto_id === i.produtoId && x.quantidade === i.kit && x.ativo);
-      if (!k || !(k as any).produtos?.ativo) throw new Error("Produto ou kit indisponível.");
-      if (i.p + i.m + i.g + i.gg !== i.kit) throw new Error("A grade de tamanhos não fecha o kit.");
+      const itemPecas = i.p + i.m + i.g + i.gg;
+      if (itemPecas <= 0) {
+        throw new Error("Cada produto deve ter pelo menos 1 peça selecionada.");
+      }
+
+      const productKits = (kits ?? [])
+        .filter((x) => x.produto_id === i.produtoId && x.ativo)
+        .map((k) => ({ quantidade: k.quantidade, preco: Number(k.preco) }));
+
+      const prodMeta = kits?.find((x) => x.produto_id === i.produtoId);
+      if (!productKits.length || !(prodMeta as any)?.produtos?.ativo) {
+        throw new Error("Produto indisponível.");
+      }
+
+      const precoUnitario = getTierUnitPrice(productKits, faixa);
+      const valor = Math.round(itemPecas * precoUnitario * 100) / 100;
+
       return {
         ...i,
-        valor: Number(k.preco),
-        nome: (k as any).produtos.nome as string,
+        pecas: itemPecas,
+        precoUnitario,
+        faixa,
+        valor,
+        nome: (prodMeta as any).produtos.nome as string,
         observacao: i.observacao || "",
       };
     });
-    const total = linhas.reduce((s, l) => s + l.valor, 0);
+
+    const total = Math.round(linhas.reduce((s, l) => s + l.valor, 0) * 100) / 100;
 
     // If local dev environment lacks admin key, return server-priced local order simulation
     if (!hasAdminKey) {
@@ -73,17 +106,21 @@ export const createOrder = createServerFn({ method: "POST" })
         id: crypto.randomUUID(),
         numero_sequencial: 1,
         total,
+        faixa,
         created_at: new Date().toISOString(),
-        linhas: linhas.map(({ nome, kit, p, m, g, gg, valor, observacao }) => ({
-          nome,
-          kit,
-          p,
-          m,
-          g,
-          gg,
-          valor,
-          observacao: observacao || "",
-        })),
+        linhas: linhas.map(
+          ({ nome, pecas, precoUnitario, p, m, g, gg, valor, observacao }) => ({
+            nome,
+            pecas,
+            precoUnitario,
+            p,
+            m,
+            g,
+            gg,
+            valor,
+            observacao: observacao || "",
+          }),
+        ),
       };
     }
 
@@ -148,35 +185,57 @@ export const createOrder = createServerFn({ method: "POST" })
       numeroSequencial = count ?? 1;
     }
 
-    const { error: iErr } = await supabaseAdmin.from("pedido_itens").insert(
-      linhas.map((l) => ({
+    // Insert order items with preco_unitario and faixa
+    const itemRows = linhas.map((l) => ({
+      pedido_id: ped!.id,
+      produto_id: l.produtoId,
+      kit: l.kit ?? null,
+      qtd_p: l.p,
+      qtd_m: l.m,
+      qtd_g: l.g,
+      qtd_gg: l.gg,
+      preco_unitario: l.precoUnitario,
+      faixa: l.faixa,
+      valor: l.valor,
+      observacao: l.observacao || null,
+    }));
+
+    const { error: iErr } = await supabaseAdmin.from("pedido_itens").insert(itemRows);
+    if (iErr) {
+      // Fallback in case columns preco_unitario/faixa are still running migration on remote DB
+      const fallbackRows = linhas.map((l) => ({
         pedido_id: ped!.id,
         produto_id: l.produtoId,
-        kit: l.kit,
+        kit: l.faixa,
         qtd_p: l.p,
         qtd_m: l.m,
         qtd_g: l.g,
         qtd_gg: l.gg,
         valor: l.valor,
         observacao: l.observacao || null,
-      })),
-    );
-    if (iErr) throw new Error(iErr.message);
+      }));
+      const { error: fbErr } = await supabaseAdmin.from("pedido_itens").insert(fallbackRows);
+      if (fbErr) throw new Error(fbErr.message);
+    }
 
     return {
       id: ped!.id,
       numero_sequencial: Number(numeroSequencial) || 1,
       total,
+      faixa,
       created_at: ped!.created_at ?? new Date().toISOString(),
-      linhas: linhas.map(({ nome, kit, p, m, g, gg, valor, observacao }) => ({
-        nome,
-        kit,
-        p,
-        m,
-        g,
-        gg,
-        valor,
-        observacao: observacao || "",
-      })),
+      linhas: linhas.map(
+        ({ nome, pecas, precoUnitario, p, m, g, gg, valor, observacao }) => ({
+          nome,
+          pecas,
+          precoUnitario,
+          p,
+          m,
+          g,
+          gg,
+          valor,
+          observacao: observacao || "",
+        }),
+      ),
     };
   });

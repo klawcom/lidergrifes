@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { accountQuery } from "@/lib/account.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { MessageCircle, CheckCircle2, ArrowRight } from "lucide-react";
+import { MessageCircle, CheckCircle2, ArrowRight, AlertCircle } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { brl } from "@/lib/format";
 import { configQuery } from "@/lib/catalog.functions";
@@ -146,7 +146,10 @@ function Finalizar() {
       cfg?.whatsapp_loja ?? "",
       buildWhatsAppMessage(confirmedOrder),
     );
-    const totalPecas = confirmedOrder.itens.reduce((acc, i) => acc + i.kit, 0);
+    const totalPecas = confirmedOrder.itens.reduce(
+      (acc, i) => acc + (i.pecas || i.p + i.m + i.g + i.gg),
+      0,
+    );
 
     return (
       <div className="mx-auto max-w-xl px-4 py-8">
@@ -191,7 +194,14 @@ function Finalizar() {
               <h2 className="font-bold uppercase tracking-wide text-foreground">ITENS</h2>
               <div className="mt-3 space-y-4">
                 {confirmedOrder.itens.map((item, idx) => {
-                  const precoUnitario = item.kit > 0 ? item.valor / item.kit : 0;
+                  const pecasTotal = item.pecas || item.p + item.m + item.g + item.gg;
+                  const precoUnitario =
+                    item.precoUnitario !== undefined
+                      ? item.precoUnitario
+                      : pecasTotal > 0
+                        ? item.valor / pecasTotal
+                        : 0;
+
                   const tamanhosAtivos: string[] = [];
                   if (item.p > 0) tamanhosAtivos.push(`P ${item.p}`);
                   if (item.m > 0) tamanhosAtivos.push(`M ${item.m}`);
@@ -204,7 +214,7 @@ function Finalizar() {
                         {idx + 1}) {item.nome}
                       </p>
                       <p className="text-muted-foreground">
-                        Kit de {item.kit} peças (R$ {formatValor(precoUnitario)} por peça)
+                        {pecasTotal} peças (R$ {formatValor(precoUnitario)} por peça)
                       </p>
                       {tamanhosAtivos.length > 0 && (
                         <p className="text-muted-foreground">
@@ -212,7 +222,7 @@ function Finalizar() {
                         </p>
                       )}
                       <p className="font-medium text-foreground">
-                        Valor do kit: R$ {formatValor(item.valor)}
+                        Valor: R$ {formatValor(item.valor)}
                       </p>
                       {item.observacao && item.observacao.trim() && (
                         <p className="mt-1 text-xs text-muted-foreground">
@@ -230,6 +240,9 @@ function Finalizar() {
               <h2 className="font-bold uppercase tracking-wide text-foreground">RESUMO</h2>
               <div className="mt-2 space-y-1">
                 <p className="text-muted-foreground">Total de peças: {totalPecas}</p>
+                <p className="text-muted-foreground">
+                  Faixa aplicada: a partir de {confirmedOrder.faixa} peças
+                </p>
                 <p className="text-base font-bold text-foreground">
                   Total dos produtos: R$ {formatValor(confirmedOrder.total)}
                 </p>
@@ -265,7 +278,7 @@ function Finalizar() {
               {confirmedOrder.observacao && confirmedOrder.observacao.trim() && (
                 <div className="mt-4 rounded-xl bg-secondary/50 p-3">
                   <p className="font-semibold text-foreground">📝 Observação do pedido:</p>
-                  <p className="mt-1 text-muted-foreground whitespace-pre-wrap">
+                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
                     {confirmedOrder.observacao.trim()}
                   </p>
                 </div>
@@ -273,7 +286,7 @@ function Finalizar() {
             </div>
 
             <div className="pt-4 text-center">
-              <p className="text-xs text-muted-foreground italic">
+              <p className="text-xs italic text-muted-foreground">
                 Aguardo o valor do frete e as formas de pagamento. Obrigado!
               </p>
             </div>
@@ -319,7 +332,32 @@ function Finalizar() {
     );
   }
 
-  // 3. Checkout form submission
+  // 3. Below minimum warning
+  if (!cart.minimoAtingido) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-12 text-center">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-amber-500/10 text-amber-600">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">Pedido abaixo do mínimo</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Seu pedido contém <span className="font-semibold text-foreground">{cart.pecas} peças</span>.
+          O pedido mínimo de atacado é de 10 peças (soma de todos os produtos e categorias).
+        </p>
+        <p className="mt-1 text-sm font-bold text-amber-600 dark:text-amber-400">
+          Faltam {cart.faltamMinimo} {cart.faltamMinimo === 1 ? "peça" : "peças"} para liberar a finalização.
+        </p>
+        <Link
+          to="/carrinho"
+          className="tap mt-6 inline-flex items-center rounded-full bg-primary px-6 font-semibold text-primary-foreground shadow-sm"
+        >
+          Voltar ao carrinho <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </div>
+    );
+  }
+
+  // 4. Checkout form submission
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cfg?.whatsapp_loja) {
@@ -350,8 +388,10 @@ function Finalizar() {
           observacao: f.observacao,
           itens: cart.items.map((i) => ({
             produtoId: i.produtoId,
-            kit: i.kit,
-            ...i.tamanhos,
+            p: i.tamanhos.p,
+            m: i.tamanhos.m,
+            g: i.tamanhos.g,
+            gg: i.tamanhos.gg,
             observacao: i.observacao || "",
           })),
         },
@@ -362,7 +402,8 @@ function Finalizar() {
         dataHora: res.created_at,
         itens: res.linhas.map((l) => ({
           nome: l.nome,
-          kit: l.kit,
+          pecas: l.pecas,
+          precoUnitario: l.precoUnitario,
           p: l.p,
           m: l.m,
           g: l.g,
@@ -371,6 +412,7 @@ function Finalizar() {
           observacao: l.observacao,
         })),
         total: res.total,
+        faixa: res.faixa,
         cliente: {
           nome: f.nome,
           email: f.email,
@@ -499,7 +541,9 @@ function Finalizar() {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur safe-bottom">
         <div className="mx-auto grid max-w-md grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 pt-3">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">{cart.pecas} peças</p>
+            <p className="text-xs text-muted-foreground">
+              {cart.pecas} peças &bull; Faixa {cart.faixa}+ peças
+            </p>
             <p className="text-xl font-bold">{brl(cart.total)}</p>
           </div>
           <Button

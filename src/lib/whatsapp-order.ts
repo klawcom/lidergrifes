@@ -1,12 +1,14 @@
 export type OrderItemData = {
   nome: string;
-  kit: number;
+  pecas: number;
+  precoUnitario?: number;
   p: number;
   m: number;
   g: number;
   gg: number;
   valor: number;
   observacao?: string | null;
+  kit?: number | null;
 };
 
 export type OrderClienteData = {
@@ -27,6 +29,7 @@ export type OrderSummaryData = {
   dataHora: Date | string;
   itens: OrderItemData[];
   total: number;
+  faixa: number;
   cliente: OrderClienteData;
   observacao?: string | null;
 };
@@ -89,7 +92,13 @@ export function buildWhatsAppMessage(data: OrderSummaryData): string {
 
   const itensBlocks = data.itens.map((item, idx) => {
     const itemNum = idx + 1;
-    const precoUnitario = item.kit > 0 ? item.valor / item.kit : 0;
+    const pecasTotal = item.pecas || item.p + item.m + item.g + item.gg || item.kit || 1;
+    const precoUnitario =
+      item.precoUnitario !== undefined
+        ? item.precoUnitario
+        : pecasTotal > 0
+          ? item.valor / pecasTotal
+          : 0;
 
     const tamanhosAtivos: string[] = [];
     if (item.p > 0) tamanhosAtivos.push(`P ${item.p}`);
@@ -99,14 +108,14 @@ export function buildWhatsAppMessage(data: OrderSummaryData): string {
 
     const lines = [
       `*${itemNum}) ${item.nome}*`,
-      `Kit de ${item.kit} peças (R$ ${formatValor(precoUnitario)} por peça)`,
+      `${pecasTotal} peças (R$ ${formatValor(precoUnitario)} por peça)`,
     ];
 
     if (tamanhosAtivos.length > 0) {
       lines.push(`Tamanhos: ${tamanhosAtivos.join(" | ")}`);
     }
 
-    lines.push(`Valor do kit: R$ ${formatValor(item.valor)}`);
+    lines.push(`Valor: R$ ${formatValor(item.valor)}`);
 
     const obsItem = item.observacao?.trim();
     if (obsItem) {
@@ -116,11 +125,17 @@ export function buildWhatsAppMessage(data: OrderSummaryData): string {
     return lines.join("\n");
   });
 
-  const totalPecas = data.itens.reduce((acc, i) => acc + i.kit, 0);
+  const totalPecas = data.itens.reduce(
+    (acc, i) => acc + (i.pecas || i.p + i.m + i.g + i.gg || i.kit || 0),
+    0,
+  );
+
+  const faixaAplicada = data.faixa || (totalPecas >= 50 ? 50 : totalPecas >= 30 ? 30 : totalPecas >= 20 ? 20 : 10);
 
   const resumo = [
     `*RESUMO*`,
     `Total de peças: ${totalPecas}`,
+    `Faixa aplicada: a partir de ${faixaAplicada} peças`,
     `*Total dos produtos: R$ ${formatValor(data.total)}*`,
     `Frete e pagamento: a combinar`,
   ].join("\n");

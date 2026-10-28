@@ -17,7 +17,8 @@ describe("WhatsApp Order Message Formatter", () => {
     itens: [
       {
         nome: "Camiseta Pima Branca",
-        kit: 10,
+        pecas: 10,
+        precoUnitario: 24.9,
         p: 5,
         m: 5,
         g: 0,
@@ -27,6 +28,7 @@ describe("WhatsApp Order Message Formatter", () => {
       },
     ],
     total: 249.0,
+    faixa: 10,
     cliente: {
       nome: "Claudinei Lima",
       email: "claudinei@exemplo.com",
@@ -51,12 +53,13 @@ describe("WhatsApp Order Message Formatter", () => {
     expect(msg).toContain("━━━━━━━━━━━━━━");
     expect(msg).toContain("*ITENS*");
     expect(msg).toContain("*1) Camiseta Pima Branca*");
-    expect(msg).toContain("Kit de 10 peças (R$ 24,90 por peça)");
+    expect(msg).toContain("10 peças (R$ 24,90 por peça)");
     expect(msg).toContain("Tamanhos: P 5 | M 5"); // G and GG with 0 are omitted
-    expect(msg).toContain("Valor do kit: R$ 249,00");
+    expect(msg).toContain("Valor: R$ 249,00");
     expect(msg).toContain("📝 Obs.: Separar golas com acabamento canelado");
     expect(msg).toContain("*RESUMO*");
     expect(msg).toContain("Total de peças: 10");
+    expect(msg).toContain("Faixa aplicada: a partir de 10 peças");
     expect(msg).toContain("*Total dos produtos: R$ 249,00*");
     expect(msg).toContain("Frete e pagamento: a combinar");
     expect(msg).toContain("*CLIENTE*");
@@ -82,7 +85,8 @@ describe("WhatsApp Order Message Formatter", () => {
       itens: [
         {
           nome: "Polo Piquet Preta",
-          kit: 20,
+          pecas: 20,
+          precoUnitario: 37.905,
           p: 0,
           m: 10,
           g: 10,
@@ -91,6 +95,7 @@ describe("WhatsApp Order Message Formatter", () => {
           observacao: "", // empty item observation
         },
       ],
+      faixa: 20,
       cliente: {
         ...baseOrder.cliente,
         complemento: "", // empty complement

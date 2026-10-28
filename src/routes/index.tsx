@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Líder Grifes Atacado" },
-      { name: "description", content: "Camisetas básicas Cotton Pima e polos Piquet Duplo no atacado. Monte seu kit e finalize o pedido pelo WhatsApp." },
+      { name: "description", content: "Camisetas básicas Cotton Pima e polos Piquet Duplo no atacado. Escolha as peças por tamanho e finalize o pedido pelo WhatsApp." },
       { property: "og:title", content: "Líder Grifes Atacado" },
       { property: "og:description", content: "Camisetas básicas e polos no atacado, a partir de 10 peças." },
       { property: "og:type", content: "website" },
@@ -23,7 +23,11 @@ export const Route = createFileRoute("/")({
 });
 
 const passos = [
-  { icon: Package, t: "Escolha o kit", d: "Kits de 10, 20, 30 ou 50 peças, com a grade de tamanhos que você quiser." },
+  {
+    icon: Package,
+    t: "Escolha as peças por tamanho (mínimo de 10 no pedido)",
+    d: "Selecione as quantidades nos tamanhos P, M, G e GG com liberdade em qualquer modelo ou categoria.",
+  },
   { icon: MessageCircle, t: "Envie no WhatsApp", d: "Finalize o pedido e ele chega pronto na nossa conversa." },
   { icon: Truck, t: "Combine frete e pagamento", d: "Acertamos tudo direto com você, rápido e sem complicação." },
 ];
