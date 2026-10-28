@@ -1,0 +1,8 @@
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { myOrdersQuery } from '@/lib/account.functions';
+import { privateHead } from '@/lib/identity';
+import { brl } from '@/lib/format';
+import { Button } from '@/components/ui/button';
+export const Route=createFileRoute('/_authenticated/meus-pedidos')({head:()=>privateHead('Meus pedidos','Histórico privado dos seus pedidos no atacado.'),loader:({context})=>context.queryClient.ensureQueryData(myOrdersQuery),component:Orders});
+function Orders(){const {data}=useSuspenseQuery(myOrdersQuery);return <section className="mx-auto max-w-2xl px-4 py-8"><h1 className="text-2xl font-semibold">Meus pedidos</h1>{data.length===0?<div className="mt-8"><p className="text-muted-foreground">Você ainda não tem pedidos.</p><Button asChild className="mt-4 h-11"><Link to="/">Ver catálogo</Link></Button></div>:<ul className="mt-6 divide-y divide-border">{data.map(p=><li key={p.id} className="py-5"><div className="flex flex-wrap justify-between gap-2"><h2 className="font-semibold">Pedido #{p.id.slice(0,8)}</h2><span className="text-sm text-muted-foreground">{p.status.replaceAll('_',' ')}</span></div><p className="mt-1 text-sm text-muted-foreground">{new Date(p.created_at).toLocaleDateString('pt-BR')}</p><ul className="mt-3 space-y-2">{p.itens.map((i,n)=><li key={n}><p>{i.produto?.nome ?? 'Produto'} · Kit {i.kit}</p><p className="text-sm text-muted-foreground">P {i.qtd_p} · M {i.qtd_m} · G {i.qtd_g} · GG {i.qtd_gg}</p></li>)}</ul><p className="mt-3 font-semibold">{brl(Number(p.total))}</p></li>)}</ul>}</section>}
