@@ -18,6 +18,8 @@ export const Route = createFileRoute("/finalizar")({
       { name: "description", content: "Informe seus dados e envie o pedido pelo WhatsApp." },
       { property: "og:title", content: "Finalizar pedido — Líder Grifes" },
       { property: "og:description", content: "Envie seu pedido no atacado pelo WhatsApp." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),

@@ -13,6 +13,8 @@ export const Route = createFileRoute("/carrinho")({
       { name: "description", content: "Revise os kits do seu pedido antes de enviar pelo WhatsApp." },
       { property: "og:title", content: "Meu pedido — Líder Grifes" },
       { property: "og:description", content: "Revise seu pedido no atacado." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),

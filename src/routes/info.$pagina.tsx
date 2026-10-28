@@ -10,9 +10,10 @@ const PAGES: Record<string, { titulo: string; campo: keyof Config }> = {
 
 export const Route = createFileRoute("/info/$pagina")({
   loader: async ({ context, params }) => {
-    if (!PAGES[params.pagina]) throw notFound();
+    const page = PAGES[params.pagina];
+    if (!page) throw notFound();
     await context.queryClient.ensureQueryData(configQuery);
-    return { titulo: PAGES[params.pagina]!.titulo };
+    return { titulo: page.titulo };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -20,6 +21,8 @@ export const Route = createFileRoute("/info/$pagina")({
       { name: "description", content: `${loaderData?.titulo ?? "Informações"} da Líder Grifes Atacado.` },
       { property: "og:title", content: `${loaderData?.titulo ?? "Informações"} — Líder Grifes` },
       { property: "og:description", content: "Informações institucionais da Líder Grifes Atacado." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: InfoPage,
@@ -28,7 +31,8 @@ export const Route = createFileRoute("/info/$pagina")({
 function InfoPage() {
   const { pagina } = Route.useParams();
   const { data: cfg } = useSuspenseQuery(configQuery);
-  const pg = PAGES[pagina]!;
+  const pg = PAGES[pagina];
+  if (!pg) return null;
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-semibold">{pg.titulo}</h1>
