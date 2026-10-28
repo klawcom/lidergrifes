@@ -61,14 +61,14 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-whatsapp: var(--whatsapp);
   --color-whatsapp-foreground: var(--whatsapp-foreground);
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
 }
 
 :root {
   --radius: 1rem;
-  --font-sans: "Manrope", system-ui, sans-serif;
-  --font-display: "Sora", system-ui, sans-serif;
+  --app-font-sans: "Manrope", system-ui, sans-serif;
+  --app-font-display: "Sora", system-ui, sans-serif;
   --background: oklch(0.985 0.004 85);
   --foreground: oklch(0.2 0.01 60);
   --card: oklch(1 0 0);
@@ -146,12 +146,12 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans);
+    font-family: var(--app-font-sans);
     font-size: 16px;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1, h2, h3 { font-family: var(--app-font-display); letter-spacing: -0.02em; }
 }
 
 @utility safe-bottom {
